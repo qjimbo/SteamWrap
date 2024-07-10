@@ -55,8 +55,6 @@ namespace SteamWrap
                 }
                 SteamClient.Restart();
             }
-            Console.WriteLine("\nPress Enter to exit...");
-            Console.ReadLine();
         }
 
         private static List<ParsedCommand> ParseCommands(string[] args)
