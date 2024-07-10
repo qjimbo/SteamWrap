@@ -1,10 +1,11 @@
 # SteamWrap
 
-SteamWrap is a utility for creating shortcuts that launch alternative game versions from Steam. It allows you to configure Steam games to launch through SteamWrap, enabling you to change which version of a game is launched without altering the original game files.
+SteamWrap is a utility launching alternative game versions from Steam. It works by configuring Steam to launch SteamWrap instead of the game exe. Of course, by default SteamWrap will launch the default game as normal, but with an additional argument it will instead launch an alternative version of a game. The benefit of this is each child
+process preserves the Steam authentication, allowing you to run old versions without having to modify them to run outside of steam.
 
 ## Features
 
-- Automatically configures Steam LaunchOptions for games to ```SteamWrap.exe %command%``` to allow redirecting to alternative versions 
+- Automatically configures Steam LaunchOptions for games to ```SteamWrap.exe %command%``` to allow SteamWrap to redirect to alternative versions 
 - Create desktop and Steam shortcuts for alternative game versions
 - Launch games through Steam while redirecting to different executables
 - When no arguments given, will launch the original version of the game transparently
@@ -13,7 +14,7 @@ SteamWrap is a utility for creating shortcuts that launch alternative game versi
 SteamWrap <game-id> [command] [arguments]
 
 ### Commands
-1. Configure launch options:
+1. Enable SteamWrap - specify which game by steam game id and it will set launchoptions to run SteamWrap when the game is started.
    ```
    SteamWrap <game-id> configure
 3. Create shortcuts:
