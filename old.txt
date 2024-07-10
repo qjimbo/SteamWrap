@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+namespace SteamWrap
+{
+    public class VDFNode
+    {
+        public string Key { get; set; }
+        public string Value { get; set; }
+        public Dictionary<string, VDFNode> Children { get; set; } = new Dictionary<string, VDFNode>();
+        public long StartByteOffset { get; set; }
+        public long EndByteOffset { get; set; }
+    }
+
+    public class LineAndOffsets
+    {
+        public string Line { get; set; }
+        public long StartByteOffset { get; set; }
+        public long EndByteOffset { get; set; }
+    }
+
+    public class SteamVDFEditor
+    {
+        private readonly string _filePath;
+        private List<LineAndOffsets> _linesWithOffsets;
+
+        public SteamVDFEditor(string filePath)
+        {
+            _filePath = filePath;
+        }
+
+        public void ModifyLaunchOptions(string gameId, string newExePath)
+        {
+            VDFNode root = ParseVDFFile(_filePath);
+            if (root == null)
+            {
+                throw new Exception("Failed to parse VDF file.");
+            }
+
+            newExePath = newExePath.Replace("\"", "\\\""); // Escape Quotes
+
+            string[] path = { "UserLocalConfigStore", "Software", "Valve", "Steam", "apps", gameId };
+            VDFNode gameNode = NavigateToNode(root, path);
+
+            if (gameNode != null)
+            {
+                gameNode.Children["LaunchOptions"] = new VDFNode { Key = "LaunchOptions", Value = newExePath };
+                ReplaceVDFBlock(_filePath, root, gameNode);
+                Console.WriteLine("Launch options updated successfully.");
+            }
+            else
+            {
+                throw new Exception("Game ID section not found.");
+            }
+        }
+
+        private VDFNode NavigateToNode(VDFNode root, string[] path)
+        {
+            VDFNode currentNode = root;
+            foreach (var key in path)
+            {
+                if (currentNode.Children.TryGetValue(key, out VDFNode nextNode))
+                {
+                    currentNode = nextNode;
+                }
+                else
+                {
+                    Console.WriteLine($"Key '{key}' not found.");
+                    return null;
+                }
+            }
+            return currentNode;
+        }
+
+        private VDFNode ParseVDFFile(string filePath)
+        {
+            _linesWithOffsets = new List<LineAndOffsets>();
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            using (StreamReader reader = new StreamReader(fs, Encoding.UTF8))
+            {
+                long position = 0;
+                while (!reader.EndOfStream)
+                {
+                    long startByteOffset = position;
+                    string line = reader.ReadLine();
+                    long endByteOffset = position + Encoding.UTF8.GetByteCount(line) + 1; // +1 for the newline character
+
+                    _linesWithOffsets.Add(new LineAndOffsets
+                    {
+                        Line = line,
+                        StartByteOffset = startByteOffset,
+                        EndByteOffset = endByteOffset
+                    });
+
+                    position = endByteOffset;
+                }
+            }
+
+            int index = 0;
+            return ParseVDFNode(ref index, null);
+        }
+
+        private VDFNode ParseVDFNode(ref int index, VDFNode parentNode)
+        {
+            VDFNode currentNode = new VDFNode();
+            while (index < _linesWithOffsets.Count)
+            {
+                string line = _linesWithOffsets[index].Line.Trim();
+                index++;
+
+                if (line.StartsWith("}"))
+                {
+                    return currentNode;
+                }
+                else if (line.StartsWith("{"))
+                {
+                    VDFNode childNode = ParseVDFNode(ref index, currentNode);
+                    if (!string.IsNullOrEmpty(currentNode.Key))
+                    {
+                        currentNode.Children[currentNode.Key] = childNode;
+                    }
+                }
+                else if (line.StartsWith("\""))
+                {
+                    int keyStart = line.IndexOf("\"") + 1;
+                    int keyEnd = line.IndexOf("\"", keyStart);
+                    string key = line.Substring(keyStart, keyEnd - keyStart);
+
+                    int valueStart = line.IndexOf("\"", keyEnd + 1) + 1;
+                    int valueEnd = line.IndexOf("\"", valueStart);
+
+                    if (valueStart > 0 && valueEnd > 0)
+                    {
+                        string value = line.Substring(valueStart, valueEnd - valueStart);
+                        currentNode.Children[key] = new VDFNode
+                        {
+                            Key = key,
+                            Value = value,
+                            StartByteOffset = _linesWithOffsets[index - 1].StartByteOffset
+                        };
+                    }
+                    else
+                    {
+                        currentNode.Key = key;
+                        currentNode.StartByteOffset = _linesWithOffsets[index - 1].StartByteOffset;
+                    }
+                }
+            }
+
+            return currentNode;
+        }
+
+        private void ReplaceVDFBlock(string filePath, VDFNode rootNode, VDFNode gameNode)
+        {
+            List<string> newLines = new List<string>();
+            SerializeVDFNode(gameNode, newLines, 0);
+            string newGameBlock = string.Join(Environment.NewLine, newLines);
+
+            string beforeBlock = File.ReadAllText(_filePath).Substring(0, (int)gameNode.StartByteOffset);
+            string afterBlock = File.ReadAllText(_filePath).Substring((int)gameNode.EndByteOffset);
+
+            string newContent = beforeBlock + newGameBlock + afterBlock;
+
+            File.WriteAllText(filePath, newContent, Encoding.UTF8);
+        }
+
+        private void SerializeVDFNode(VDFNode node, List<string> lines, int indentLevel)
+        {
+            string indent = new string('\t', indentLevel);
+
+            if (!string.IsNullOrEmpty(node.Key) && !string.IsNullOrEmpty(node.Value))
+            {
+                lines.Add($"{indent}\"{node.Key}\"\t\t\"{node.Value}\"");
+            }
+
+            if (node.Children.Count > 0)
+            {
+                lines.Add($"{indent}\"{node.Key}\"");
+                lines.Add($"{indent}{{");
+                foreach (var child in node.Children)
+                {
+                    SerializeVDFNode(child.Value, lines, indentLevel + 1);
+                }
+                lines.Add($"{indent}}}");
+            }
+        }
+    }
+}
