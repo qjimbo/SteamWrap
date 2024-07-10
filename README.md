@@ -48,7 +48,7 @@ SteamWrap 271590 configure shortcut both  "C:\Games\MyGame.exe" "Old Version of 
 - Also inspired by [SMAPI](https://smapi.io/) which uses a similar approach for Stardew Valley modding.
 
 ## License
-This project is licensed under the Apache 2.0 license with the Commons Clause. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
