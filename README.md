@@ -1,32 +1,38 @@
 # SteamWrap
 
-SteamWrap is a utility for managing Steam game launch options and creating shortcuts for alternative game versions. It allows you to configure Steam games to launch through SteamWrap, enabling you to modify the game's launch behavior without altering the original game files.
+SteamWrap is a utility for creating shortcuts that launch alternative game versions from Steam. It allows you to configure Steam games to launch through SteamWrap, enabling you to change which version of a game is launched without altering the original game files.
 
 ## Features
 
-- Configure Steam launch options for games
+- Automatically configures Steam LaunchOptions for games to ```SteamWrap.exe %command%``` to allow redirecting to alternative versions 
 - Create desktop and Steam shortcuts for alternative game versions
 - Launch games through Steam while redirecting to different executables
+- When no arguments given, will launch the original version of the game transparently
 
 ## Usage
 SteamWrap <game-id> [command] [arguments]
 
 ### Commands
-
 1. Configure launch options:
+   ```
    SteamWrap <game-id> configure
-
-2. Create shortcuts:
+3. Create shortcuts:
+   ```
    SteamWrap <game-id> shortcut <type> <exe-path> <shortcut-name> <icon-path>
+   ```
    Types: desktop, steam, both
 
-3. Shutdown Steam:
+4. Shutdown Steam:
+   ```
    SteamWrap shutdown-steam
+   ```
 
 ### Examples
+```
 SteamWrap 271590 configure
-SteamWrap 271590 shortcut desktop "C:\Games\GTA5.exe" "Grand Theft Auto V" "C:\Games\GTA5.ico"
-SteamWrap 271590 configure shortcut both "C:\Games\GTA5.exe" "GTA V" "C:\Games\GTA5.ico"
+SteamWrap 271590 shortcut desktop "C:\Games\MyGame.exe" "Old Version of My Game" "C:\Games\CoolIcon.ico"
+SteamWrap 271590 configure shortcut both  "C:\Games\MyGame.exe" "Old Version of My Game" "C:\Games\CoolIcon.ico"
+```
 
 ## Installation
 1. Clone this repository or download the latest release.
