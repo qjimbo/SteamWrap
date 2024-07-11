@@ -1,5 +1,5 @@
+<img src="https://github.com/qjimbo/SteamWrap/assets/21266513/5a4ad25c-0701-42db-881a-6f11edb3dc76"  width="300px"></img>
 # SteamWrap
-
 SteamWrap is a utility for launching alternative game versions from Steam. It works by configuring Steam to launch SteamWrap instead of the game exe. By default SteamWrap will launch the default game as normal, but with an additional argument it will instead launch an alternative exe, which is typically an older version of a game. The benefit of this is each child process preserves the Steam authentication, allowing you to run old versions without having to modify them to run outside of steam.
 
 ## Features
